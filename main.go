@@ -13,15 +13,17 @@ func setupRouter() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
-	r.GET("/create-shopping-list", func(c *gin.Context) {
-		user := c.Params.ByName("name")
-		data := scrapper.Scrap()
+	r.POST("/create-shopping-list", func(c *gin.Context) {
+		var newTargetWebsites []scrapper.Website
 
-		if len(data) != 0 {
-			c.IndentedJSON(http.StatusOK, gin.H{"data": data})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"user": user, "status": "no value"})
+		if err := c.BindJSON(&newTargetWebsites); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
 		}
+
+		data := scrapper.Scrap(newTargetWebsites)
+
+		c.IndentedJSON(http.StatusOK, gin.H{"data": data})
 	})
 
 	return r
