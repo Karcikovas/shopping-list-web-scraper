@@ -1,28 +1,17 @@
 package scrapper
 
 import (
+	"fmt"
 	"github.com/gocolly/colly"
 )
 
 type product struct {
-	Url   string `json:"url"`
-	Image string `json:"image"`
-	Name  string `json:"name"`
-	Price string `json:"price"`
+	Name     string `json:"name"`
+	Quantity string `json:"quantity"`
 }
 
 type Website *struct {
 	Url string `json:"url"`
-}
-
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-
-	return false
 }
 
 func Scrap(websites []Website) []product {
@@ -31,15 +20,18 @@ func Scrap(websites []Website) []product {
 	c := colly.NewCollector()
 	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
-	c.OnHTML("li.product", func(e *colly.HTMLElement) {
+	c.OnHTML(".ingredients tbody", func(e *colly.HTMLElement) {
 		newProduct := product{}
 
-		newProduct.Url = e.ChildAttr("a", "href")
-		newProduct.Image = e.ChildAttr("img", "src")
-		newProduct.Name = e.ChildText("h2")
-		newProduct.Price = e.ChildText(".price")
+		e.ForEach("tr", func(_ int, e *colly.HTMLElement) {
 
-		products = append(products, newProduct)
+			fmt.Println(e)
+
+			newProduct.Quantity = e.ChildAttr("span", "amount")
+			newProduct.Quantity = e.ChildAttr("span", "ingredient")
+
+			products = append(products, newProduct)
+		})
 	})
 
 	for _, website := range websites {
